@@ -100,4 +100,11 @@ class Cra_Public {
 
 	}
 
+	public function show_listings_cb() {
+		// global $wpdb;
+		// $tableName = $wpdb->prefix."stores";
+		// return "select * FROM $tableName WHERE LIMIT 10";
+		return "Hello!! I am sample shortcode";
+	}
+
 }
