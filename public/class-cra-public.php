@@ -101,10 +101,99 @@ class Cra_Public {
 	}
 
 	public function show_listings_cb() {
-		// global $wpdb;
-		// $tableName = $wpdb->prefix."stores";
-		// return "select * FROM $tableName WHERE LIMIT 10";
-		return "Hello!! I am sample shortcode";
+		global $wpdb;
+		$tableName = $wpdb->prefix."stores";
+		$results = $wpdb->get_results("select * FROM $tableName LIMIT 10", ARRAY_A);
+
+		$ret = '<table width="799" border="0" align="center" cellpadding="0" cellspacing="0" class="smallbold">';
+
+			$count == 0;
+			foreach ($results as $i => $ShowStores) {
+					$Name = $ShowStores['Name'];
+					$Address = $ShowStores['Address'];
+					$Address2 = $ShowStores['Address2'];
+					$City = $ShowStores['City'];
+					$State = $ShowStores['State'];
+					$ListingZip = $ShowStores['Zip'];
+					$Phone = $ShowStores['Phone'];
+					$Website = $ShowStores['Website'];
+					$Discount = $ShowStores ['Discount'];
+					$Category = $ShowStores['Category'];
+					$Longitude = $ShowStores['Longitude'];
+					$Latitude = $ShowStores['Latitude'];
+					$Miles = $ShowStores['distance'];
+					$Featured = $ShowStores['featured'];
+					$PastFeatured = $ShowStores['pastfeatured'];
+					$DirectionAddress = "$Address, $City, $State, $ListingZip";
+					$DirectionAddress = urlencode($DirectionAddress);
+
+					if ($Featured == "1") {
+						$CatPic = "/images/sotm.gif";
+					}
+					elseif ($PastFeatured == "1") {
+						$CatPic = "/images/sotm_past.gif";
+					}
+					elseif ($Category == "1") {
+						$CatPic = "/images/platinum_icon.jpg";
+					}
+					elseif ($Category == "2") {
+						$CatPic = "/images/gold_icon.jpg";
+					}
+					elseif ($Category == "3") {
+						$CatPic = "/images/business_icon.jpg";
+					}
+
+					$ret .= "<tr>";
+					$ret .= '<td width="266" height="90" align="left" valign="top" class="smalltextbold">
+						<span class="storename"><?php echo $Name ?></span>
+						<span class="smalltextbold"><br />';
+						if ($Category != "2") {
+							$ret .= "$Address <br />";
+						}
+						if ($Category != "2") {
+							if ($Address2 != "") {
+								$ret .= "$Address2 <br />";
+							}
+						}
+						$ret .= $City.','.$State.'&nbsp;';
+						if ($Category != "2") {
+							$ret .= $ListingZip;
+						}
+						$ret .= "<br />";
+						if ($Category != "2") {
+							if ($Phone != "") {
+								$ret .= $this->format_phone($Phone);
+							}
+							$ret .= "<br />";
+							if ($Website != "") {
+								$ret .= "<a href=http://$Website target=_blank class=listingslink>$Website</a> <br>";
+							}
+						}
+						$ret .= "</span>";
+						if ($Category != "2") {
+							$ret .= '<a href="http://maps.google.com/maps?daddr='.$DirectionAddress.'"target="_blank" class="listingslink">Get Directions</a>';
+						}
+						$ret .= '<br />';
+						if ($Category == "2") {
+							$ret .= '<a href="https://www.cigarrights.org/join.php?Type=GACS&MemType=Renew&Ref=" class="listingslinkupgrade">Upgrade to Platinum to show full listing</a>';
+						}
+						$ret .= '<br /><br />Distance to shop: <font color="#00CC00">'.round($Miles).' miles</font><br><br>';
+						$ret .= '<img src="'.$CatPic.'" /></td>';
+					$ret .= '</tr>';
+		}
+		$ret .= '</table>';
+
+		return $ret;
+	}
+
+	function format_phone($phone) {
+		$phone = preg_replace("/[^0-9]/", "", $phone);
+		if(strlen($phone) == 7)
+			return preg_replace("/([0-9]{3})([0-9]{4})/", "$1-$2", $phone);
+		elseif(strlen($phone) == 10)
+			return preg_replace("/([0-9]{3})([0-9]{3})([0-9]{4})/", "($1) $2-$3", $phone);
+		else
+			return $phone;
 	}
 
 }
