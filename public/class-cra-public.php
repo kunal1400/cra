@@ -101,6 +101,7 @@ class Cra_Public {
 	}
 
 	public function show_listings_cb() {
+		// http://localhost/toysandgames/cra-listings/?State=FL&City=Orlando&Zip=32819&RadiusMiles=10&Category=1
 		global $wpdb;
 		$storeTableName = $wpdb->prefix."stores";
 		$todays_date = date("Y-m-d");
