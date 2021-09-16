@@ -102,7 +102,7 @@ class Cra_Admin {
 
 	public function import_stores() {
 		global $table_prefix, $wpdb;
-		$table_name = $table_prefix . "craa_stores";
+		$table_name = $table_prefix . "stores";
 		$toy_stores = array(
 		  array('Name' => 'Corona Cigar Company','Address' => '7792 W. Sand Lake Road','Address2' => '','City' => 'Orlando','State' => 'FL','Zip' => '32819','Phone' => '4072481212','Website' => 'www.coronacigar.com','Discount' => '','Category' => '1','Status' => '','Longitude' => '-81.4880601','Latitude' => '28.4498672','featured' => '','pastfeatured' => '','expiration' => '2030-11-23','LastUpdate' => '2020-04-03 16:08:12','LastUser' => 'hclark'),
 		  array('Name' => 'Corona Cigar Company','Address' => '121 S Orange Avenue','Address2' => '','City' => 'Orlando','State' => 'FL','Zip' => '32801','Phone' => '4074045344','Website' => 'www.coronacigar.com','Discount' => '','Category' => '1','Status' => '','Longitude' => '-81.378512','Latitude' => '28.540837','featured' => '','pastfeatured' => '','expiration' => '2029-11-23','LastUpdate' => '2018-12-04 16:05:43','LastUser' => 'hclark'),
@@ -1555,10 +1555,7 @@ class Cra_Admin {
 		);
 
 		foreach ($toy_stores as $i => $row) {
-			$res = $wpdb->insert($table_name, $row);
-			echo '<pre>';
-			print_r($res);
-			echo '</pre>';
+			$res = $wpdb->insert($table_name, $row);			
 		}
 	}
 
