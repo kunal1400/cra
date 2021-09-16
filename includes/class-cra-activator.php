@@ -31,7 +31,7 @@ class Cra_Activator {
 	 */
 	public static function activate() {
 		global $table_prefix, $wpdb;
-	    $storeTable = $table_prefix . "stores";
+	    $storeTable = $table_prefix . "craa_stores";
 
 	    #Check to see if the table exists already, if not, then create it
 	    if($wpdb->get_var( "show tables like '$storeTable'" ) != $storeTable) {
@@ -61,7 +61,9 @@ class Cra_Activator {
 	        // File required to create table
 	        require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
 	        dbDelta($sql);
+					
 	    }
 	}
+
 
 }
