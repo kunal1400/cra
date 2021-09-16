@@ -105,6 +105,7 @@ class Cra_Public {
 		global $wpdb;
 		$storeTableName = $wpdb->prefix."stores";
 		$todays_date = date("Y-m-d");
+		$allState = array('FL','MN','NY','NC','PA','TX','VA','NV','SC','AZ','NH','CA','MA','IL','KS','IN','CO','TN','MD','AL','GA','CT','LA','WA','NJ','IA','SD','MO','MI','OH','HI','DC','WY','KY','WI','NM','RI','OR','MS','OK','AK','AR','DE','ME','NE','UT','WV','ND','MT','ID','VT');
 
 		// Getting variables from query string and POST data
 		if (array_key_exists('_submit_check', $_POST)) {
@@ -133,7 +134,56 @@ class Cra_Public {
 		}
 
 		// INSERT THE SEARCH FORM HERE
-
+		?>
+		<table width="850" style="border:1px; border-color: #888888; border-style:solid;" cellpadding="0" cellspacing="0" id="searchbg">
+			<tr>
+					<td width="620" align="center" valign="top">
+						<table width="614" border="0" cellspacing="3" cellpadding="3">
+							<form name="thisForm" method="get" action="">
+								<input type="hidden" name="_submit_check" value="1"/>
+								<tr>
+									<td width="181" align="left" class="smallwhitebold">City:<br />
+										<input class="smalltext" type="text" size="23" maxlength="250" name="City" value="" />
+									</td>
+									<td width="97" align="left" class="smallwhitebold">State: <br />
+										<select name="State" class="smalltext">
+											<?php foreach ($allState as $key => $state): ?>
+												<option value="<?php echo $state ?>"><?php echo $state ?></option>
+											<?php endforeach; ?>
+										</select>
+									</td>
+									<td width="84" align="left" class="smallwhitebold">OR</td>
+									<td colspan="2" align="left" class="smallwhitebold">Zip Code:<br />
+										<input class="smalltext" type="text" size="23" maxlength="250" name="Zip" value="" />
+									</td>
+								 </tr>
+								<tr>
+									<td align="left" class="smallwhitebold">Within: <br />
+										<select name="RadiusMiles" id="RadiusMiles" class="smalltext">
+											<option value="10" <?php if ($RadiusMiles=="10"){?> selected <?php } ?>>10 Miles</option>
+											<option value="25" <?php if ($RadiusMiles=="25"){?> selected <?php } ?>>25 Miles</option>
+											<option value="50" <?php if ($RadiusMiles=="50"){?> selected <?php } ?>>50 Miles</option>
+											<option value="100" <?php if ($RadiusMiles=="100"){?> selected <?php } ?>>100 Miles</option>
+										</select>
+									</td>
+									<td colspan="2" align="left" class="smallwhitebold">Category:<br />
+										<select name="Category" class="smalltext">
+											<option value="">&lt;All Types&gt;</option>
+											<option value="1">1</option>
+											<option value="2">2</option>
+											<option value="3">3</option>
+										</select>
+									</td>
+									<td width="64"><input type="submit" value="Search"></td>
+									<td width="140">&nbsp;</td>
+								</tr>
+							</form>
+						</table>
+					</td>
+						<td width="230" align="center" valign="top"><img src="/images/poweredbyCF.jpg" border="0"/></td>
+				</tr>
+		</table>
+		<?php
 		// If this is a City Search continue
 		if ( $City <> "" || $Zip <> "" ) {
 			/*** Open our recordset - THIS DB NOT GIVEN BY CLIENT
