@@ -2,3 +2,10 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+ .searchContainerCol {
+    float: left;
+    width: 25%;
+}
+.searchContainerRow > *:nth-child(4n+1) {
+   clear: both;
+}

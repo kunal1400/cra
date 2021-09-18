@@ -107,8 +107,14 @@ class Cra_Public {
 		$todays_date = date("Y-m-d");
 		$allState = array('FL','MN','NY','NC','PA','TX','VA','NV','SC','AZ','NH','CA','MA','IL','KS','IN','CO','TN','MD','AL','GA','CT','LA','WA','NJ','IA','SD','MO','MI','OH','HI','DC','WY','KY','WI','NM','RI','OR','MS','OK','AK','AR','DE','ME','NE','UT','WV','ND','MT','ID','VT');
 
+		$State = "FL";
+		$City = "";
+		$Zip = "";
+		$RadiusMiles = 10;
+		$Cat = 1;
+
 		// Getting variables from query string and POST data
-		if (array_key_exists('_submit_check', $_POST)) {
+		if ( array_key_exists('_submit_check', $_POST) ) {
 			$State = $_POST['State'];
 			$City = $_POST['City'];
 			$Zip = $_POST['Zip'];
@@ -132,29 +138,27 @@ class Cra_Public {
 				$Cat = $_GET['Category'];
 			}
 		}
-
-		// INSERT THE SEARCH FORM HERE
 		?>
-		<table width="850" style="border:1px; border-color: #888888; border-style:solid;" cellpadding="0" cellspacing="0" id="searchbg">
+		<table style="border:1px; border-color: #888888; border-style:solid;" cellpadding="0" cellspacing="0" id="searchbg">
 			<tr>
-					<td width="620" align="center" valign="top">
-						<table width="614" border="0" cellspacing="3" cellpadding="3">
+					<td width="80%" align="center" valign="top">
+						<table width="100%" border="0" cellspacing="3" cellpadding="3">
 							<form name="thisForm" method="get" action="">
 								<input type="hidden" name="_submit_check" value="1"/>
 								<tr>
 									<td width="181" align="left" class="smallwhitebold">City:<br />
-										<input class="smalltext" type="text" size="23" maxlength="250" name="City" value="" />
+										<input class="smalltext" type="text" size="23" maxlength="250" name="City" value="<?php echo $City ?>" />
 									</td>
 									<td width="97" align="left" class="smallwhitebold">State: <br />
 										<select name="State" class="smalltext">
 											<?php foreach ($allState as $key => $state): ?>
-												<option value="<?php echo $state ?>"><?php echo $state ?></option>
+												<option value="<?php echo $state ?>" <?php echo ($State == $state ? 'selected' : '') ?>><?php echo $state ?></option>
 											<?php endforeach; ?>
 										</select>
 									</td>
 									<td width="84" align="left" class="smallwhitebold">OR</td>
 									<td colspan="2" align="left" class="smallwhitebold">Zip Code:<br />
-										<input class="smalltext" type="text" size="23" maxlength="250" name="Zip" value="" />
+										<input class="smalltext" type="text" size="23" maxlength="250" name="Zip" value="<?php echo $Zip ?>" />
 									</td>
 								 </tr>
 								<tr>
@@ -169,9 +173,9 @@ class Cra_Public {
 									<td colspan="2" align="left" class="smallwhitebold">Category:<br />
 										<select name="Category" class="smalltext">
 											<option value="">&lt;All Types&gt;</option>
-											<option value="1">1</option>
-											<option value="2">2</option>
-											<option value="3">3</option>
+											<option value="1" <?php if ($Cat=="1"){?> selected <?php } ?>>1</option>
+											<option value="2" <?php if ($Cat=="2"){?> selected <?php } ?>>2</option>
+											<option value="3" <?php if ($Cat=="3"){?> selected <?php } ?>>3</option>
 										</select>
 									</td>
 									<td width="64"><input type="submit" value="Search"></td>
@@ -180,12 +184,15 @@ class Cra_Public {
 							</form>
 						</table>
 					</td>
-						<td width="230" align="center" valign="top"><img src="/images/poweredbyCF.jpg" border="0"/></td>
+					<td width="20%" align="center" valign="top"><img src="/images/poweredbyCF.jpg" border="0"/></td>
 				</tr>
 		</table>
+
 		<?php
 		// If this is a City Search continue
-		if ( $City <> "" || $Zip <> "" ) {
+		if ( $City != "" || $Zip != "" ) {
+			echo "<h1>This is a City Only Search</h1>";
+
 			/*** Open our recordset - THIS DB NOT GIVEN BY CLIENT
 			if ($City <> "") {
 				$findzip = mysql_query("select * FROM zipcodes WHERE City = '$City' and State = '$State' LIMIT 1") or die(mysql_error());
@@ -209,62 +216,22 @@ class Cra_Public {
 			$searchzip = 32819;
 			$ZipLat = 28.4498672;
 			$ZipLong = -81.4880601;
+
+			if( count($findzip) != 0 ) {
+				echo "<div class=smallbold align=center><br>We were unable to locate this City in our database.<br>Please verify the City is spelled correctly and you have the correct state.</div>";
+			}
+			if ($Cat != "") {
+				$sql = "SELECT Name, Address, Address2, City, State, Zip, Phone, Website, Discount, Category, Longitude, Latitude, featured, pastFeatured, (3959*acos(cos(radians($ZipLat))*cos(radians(Latitude))*cos(radians(Longitude)-radians($ZipLong))+sin(radians($ZipLat))*sin(radians(Latitude)))) AS distance FROM $storeTableName WHERE Category = '$Cat' and (expiration >= '$todays_date' OR Status = 'Active') HAVING distance < $RadiusMiles ORDER BY distance";
+				$GetStores = $wpdb->get_results($sql, ARRAY_A);
+			}
+			else {
+				$sql = "SELECT Name, Address, Address2, City, State, Zip, Phone, Website, Discount, Category, Latitude, Longitude, featured, pastFeatured, (3959*acos(cos(radians($ZipLat))*cos(radians(Latitude))*cos(radians(Longitude)-radians($ZipLong))+sin(radians($ZipLat))*sin(radians(Latitude)))) AS distance FROM $storeTableName WHERE (expiration >= '$todays_date' OR Status = 'Active') HAVING distance <= $RadiusMiles ORDER BY distance";
+				$GetStores = $wpdb->get_results($sql, ARRAY_A);
+			}
 			?>
-
-			<table width="860" border="0" align="center" cellpadding="0" cellspacing="0" style="padding-left: 10px">
-			  <tr>
-			    <td>
-						<table width="860" border="0" align="center" cellpadding="0" cellspacing="0">
-						  <tr>
-						    <td>
-							    <table width="860" border="0" align="center" cellpadding="0" cellspacing="0" class="smallbold">
-							      <tr>
-							        <td width="860" height="46" valign="top">
-								 				<!-- MAP PHP GOES HERE -->
-												<?php
-												if( count($findzip) != 0 ) {
-													echo "<div class=smallbold align=center><br>We were unable to locate this City in our database.<br>Please verify the City is spelled correctly and you have the correct state.</div>";
-								 				}
-												else {
-													if ($Cat <> "") {
-														$GetStores = $wpdb->get_results( "SELECT Name, Address, Address2, City, State, Zip, Phone, Website, Discount, Category, Longitude, Latitude,  (3959*acos(cos(radians($ZipLat))*cos(radians(Latitude))*cos(radians(Longitude)-radians($ZipLong))+sin(radians($ZipLat))*sin(radians(Latitude)))) AS distance FROM $storeTableName WHERE Category = '$Cat' and (expiration >= '$todays_date' OR Status = 'Active') HAVING distance < $RadiusMiles ORDER BY distance", ARRAY_A );
-													}
-													else {
-														$GetStores = $wpdb->get_results( "SELECT Name, Address, Address2, City, State, Zip, Phone, Website, Discount, Category, Longitude, Latitude,  (3959*acos(cos(radians($ZipLat))*cos(radians(Latitude))*cos(radians(Longitude)-radians($ZipLong))+sin(radians($ZipLat))*sin(radians(Latitude)))) AS distance FROM $storeTableName WHERE (expiration >= '$todays_date' OR Status = 'Active') HAVING distance < $RadiusMiles ORDER BY distance", ARRAY_A );
-													}
-													if( count($GetStores) == 0 ) {
-														echo "<div class=smallbold align=center><br>We were unable to locate any Great American Cigar Shops&trade; with the criteria you specified.<br>Please expand your distance or select different options.</div>";
-								 					}
-												}
-												?>
-							 				</td>
-							      </tr>
-							    </table>
-								</td>
-						  </tr>
-						</table>
-					</td>
-			  </tr>
-			</table>
-
-			<div style="padding-left: 40px">
-				<table width="799" border="0" align="center" cellpadding="0" cellspacing="0" class="smallbold">
-
+			<div class="searchContainer">
+				<div class="searchContainerRow">
 				<?php
-				// echo "<pre>";
-				// print_r($GetStores);
-				// echo "</pre>";
-				if( count($GetStores) == 0 ) {}
-				else {
-				  if ($Cat <> "") {
-				    $sql = "SELECT Name, Address, Address2, City, State, Zip, Phone, Website, Discount, Category, Longitude, Latitude, featured, pastFeatured, (3959*acos(cos(radians($ZipLat))*cos(radians(Latitude))*cos(radians(Longitude)-radians($ZipLong))+sin(radians($ZipLat))*sin(radians(Latitude)))) AS distance FROM $storeTableName WHERE Category = '$Cat' and (expiration >= '$todays_date' OR Status = 'Active') HAVING distance < $RadiusMiles ORDER BY distance";
-				    $GetStores = $wpdb->get_results($sql, ARRAY_A);
-				  }
-				  else {
-				    $sql = "SELECT Name, Address, Address2, City, State, Zip, Phone, Website, Discount, Category, Latitude, Longitude, featured, pastFeatured, (3959*acos(cos(radians($ZipLat))*cos(radians(Latitude))*cos(radians(Longitude)-radians($ZipLong))+sin(radians($ZipLat))*sin(radians(Latitude)))) AS distance FROM $storeTableName WHERE (expiration >= '$todays_date' OR Status = 'Active') HAVING distance <= $RadiusMiles ORDER BY distance";
-				    $GetStores = $wpdb->get_results($sql, ARRAY_A);
-				  }
-
 				  foreach ($GetStores as $count => $ShowStores) {
 				      $Name = $ShowStores['Name'];
 				      $Address = $ShowStores['Address'];
@@ -280,34 +247,29 @@ class Cra_Public {
 				      $Latitude = $ShowStores['Latitude'];
 				      $Miles = $ShowStores['distance'];
 				      $Featured = $ShowStores['featured'];
-				      $PastFeatured = $ShowStores['pastfeatured'];
+				      $PastFeatured = $ShowStores['pastFeatured'];
 				      $DirectionAddress = "$Address, $City, $State, $ListingZip";
 				      $DirectionAddress = urlencode($DirectionAddress);
 
-				      if ($Featured == "1")
-				      { $CatPic = "/images/sotm.gif"; }
-				      elseif ($PastFeatured == "1")
-				      { $CatPic = "/images/sotm_past.gif"; }
-				      elseif ($Category == "1")
-				      { $CatPic = "/images/platinum_icon.jpg"; }
-				      elseif ($Category == "2")
-				      { $CatPic = "/images/gold_icon.jpg"; }
-				      elseif ($Category == "3")
-				      { $CatPic = "/images/business_icon.jpg"; }
-
-				      if ($count == 3) {
-				        echo "</tr><tr><td height=10 valign=middle align=left><img src=/images/layout/hrule_200px.gif /></td><td height=15 valign=middle align=left><img src=/images/layout/hrule_200px.gif /></td><td height=15 valign=middle align=left><img src=/images/layout/hrule_200px.gif /></td></tr><tr>";
-				        echo "<tr><td colspan=3 height=5>&nbsp;</td></tr><tr>";
-				        $count = 0;
-				      }
-				      elseif ($count == 0) {
-				        echo "<tr><td colspan=3 height=20>&nbsp;</td></tr><tr>";
-				      }
+				      if ($Featured == "1"){
+								$CatPic = "/images/sotm.gif";
+							}
+				      elseif ($PastFeatured == "1"){
+								$CatPic = "/images/sotm_past.gif";
+							}
+				      elseif ($Category == "1"){
+								$CatPic = "/images/platinum_icon.jpg";
+							}
+				      elseif ($Category == "2"){
+								$CatPic = "/images/gold_icon.jpg";
+							}
+				      elseif ($Category == "3"){
+								$CatPic = "/images/business_icon.jpg";
+							}
 				      ?>
-							<td width="266" height="90" align="left" valign="top" class="smalltextbold">
-							  <span class="storename"><?php echo $Name ?></span>
-							  <span class="smalltextbold"><br />
-							    <?php
+							<div class="searchContainerCol">
+							  <p><b><?php echo $Name ?></b></p>
+							  <p><?php
 							    if ($Category <> "2") {
 							      echo "$Address <br />";
 							    }
@@ -331,65 +293,41 @@ class Cra_Public {
 							      }
 							    }
 							    ?>
-							  </span>
+							  </p>
 							  <?php if ($Category <> "2") { ?>
-							    <a href="http://maps.google.com/maps?daddr=<?php echo $DirectionAddress; ?>"target="_blank" class="listingslink">Get Directions</a><?php
-							  } ?>
-							  <br />
-							  <?php if ($Category == "2") {
-							    ?><a href="https://www.cigarrights.org/join.php?Type=GACS&MemType=Renew&Ref=" class="listingslinkupgrade">Upgrade to Platinum to show full listing</a><?php
-							  } ?>
-							  <br />
-							  <br />Distance to shop:
-							  <font color="#00CC00"><?php echo round($Miles) ?> miles</font><br><br>
-							  <img src="<?php echo $CatPic ?>" />
-							</td>
+							  	<p><a href="http://maps.google.com/maps?daddr=<?php echo $DirectionAddress; ?>"target="_blank" class="listingslink">Get Directions</a></p>
+								<?php } ?>
+							  <?php if ($Category == "2") { ?>
+									<p><a href="https://www.cigarrights.org/join.php?Type=GACS&MemType=Renew&Ref=" class="listingslinkupgrade">Upgrade to Platinum to show full listing</a></p>
+								<?php } ?>
+							  <p>Distance to shop: <font color="#00CC00"><?php echo round($Miles) ?> miles</font></p>
+							  <p><img src="<?php echo $CatPic ?>" /></p>
+								<br/>
+							</div>
 							<?php
 				    }
-
-				  }
+						?>
+					</div>
+				</div>
+				<?php
 				}
 				// This is a State Only Search
 				else {
+					echo "<h1>This is a State Only Search</h1>";
+					if ($Cat <> "") {
+						$GetStores = $wpdb->get_results("select * FROM $storeTableName WHERE State = '$State' and (expiration >= '$todays_date' OR Status = 'Active') and Category='$Cat' ORDER BY NAME", ARRAY_A);
+					}
+					else {
+						$GetStores = $wpdb->get_results("select * FROM $storeTableName WHERE State = '$State' and (expiration >= '$todays_date' OR Status = 'Active') ORDER BY NAME", ARRAY_A);
+					}
+					if( count($GetStores) == 0 ) {
+						echo "<div class=smallbold align=center><br>There are currently no Great American Cigar Shops&trade; in this state.<br /><a href=http://www.cigarrights.org/membership_GACS.php>Join now and be the first!</a></div>";
+					}
+					else {}
 					?>
-					<table width="860" border="0" align="center" cellpadding="0" cellspacing="0" style="padding-left:10px;">
-						<tr>
-							<td>
-								<table width="860" border="0" align="center" cellpadding="0" cellspacing="0">
-									<tr>
-										<td>
-											<table width="860" border="0" align="center" cellpadding="0" cellspacing="0" class="smallbold">
-												<td width="860" height="46" valign="top">
-													<?php
-													if ($Cat <> "") {
-													$GetStores = $wpdb->get_results("select * FROM $storeTableName WHERE State = '$State' and (expiration >= '$todays_date' OR Status = 'Active') and Category='$Cat' ORDER BY NAME", ARRAY_A);
-													}
-													else {
-													$GetStores = $wpdb->get_results("select * FROM $storeTableName WHERE State = '$State' and (expiration >= '$todays_date' OR Status = 'Active') ORDER BY NAME", ARRAY_A);
-													}
-													if( count($GetStores) == 0 ) {
-													echo "<div class=smallbold align=center><br>There are currently no Great American Cigar Shops&trade; in this state.<br /><a href=http://www.cigarrights.org/membership_GACS.php>Join now and be the first!</a></div>";
-													}
-													else {}
-													?>
-												</td>
-											</table>
-										</td>
-									</tr>
-								</table>
-							</td>
-						</tr>
-					</table>
-
-					<div style="padding-left: 40px"><table width="799" border="0" align="center" cellpadding="0" cellspacing="0" class="smallbold">
+					<div class="searchContainer">
+						<div class="searchContainerRow">
 					 <?php
-						if ($Cat <> "") {
-							$GetStores = $wpdb->get_results("select * FROM $storeTableName WHERE State = '$State' and (expiration >= '$todays_date' OR Status = 'Active') and Category = '$Cat' ORDER BY NAME", ARRAY_A);
-						}
-						else{
-							$GetStores = $wpdb->get_results("select * FROM $storeTableName WHERE State = '$State' and (expiration >= '$todays_date' OR Status = 'Active') ORDER BY NAME", ARRAY_A);
-						}
-
 						foreach ($GetStores as $count => $ShowStores) {
 								$Name = $ShowStores['Name'];
 								$Address = $ShowStores['Address'];
@@ -408,35 +346,31 @@ class Cra_Public {
 								$DirectionAddress = "$Address, $City, $State, $ListingZip";
 								$DirectionAddress = urlencode($DirectionAddress);
 
-								if ($Featured == "1")
-								{ $CatPic = "/images/sotm.gif"; }
-								elseif ($PastFeatured == "1")
-								{ $CatPic = "/images/sotm_past.gif"; }
-								elseif ($Category == "1")
-								{ $CatPic = "/images/platinum_icon.jpg"; }
-								elseif ($Category == "2")
-								{ $CatPic = "/images/gold_icon.jpg"; }
-								elseif ($Category == "3")
-								{ $CatPic = "/images/business_icon.jpg"; }
-
-								if ($count == 3) {
-									echo "</tr><tr><td height=10 valign=middle align=left><img src=/images/layout/hrule_200px.gif /></td><td height=15 valign=middle align=left><img src=/images/layout/hrule_200px.gif /></td><td height=15 valign=middle align=left><img src=/images/layout/hrule_200px.gif /></td></tr><tr>";
-									echo "<tr><td colspan=3 height=5>&nbsp;</td></tr><tr>";
+								if ($Featured == "1") {
+									$CatPic = "/images/sotm.gif";
 								}
-								elseif ($count == 0) {
-									echo "<tr><td colspan=3 height=20>&nbsp;</td></tr><tr>";
+								elseif ($PastFeatured == "1") {
+									$CatPic = "/images/sotm_past.gif";
+								}
+								elseif ($Category == "1") {
+									$CatPic = "/images/platinum_icon.jpg";
+								}
+								elseif ($Category == "2") {
+									$CatPic = "/images/gold_icon.jpg";
+								}
+								elseif ($Category == "3") {
+									$CatPic = "/images/business_icon.jpg";
 								}
 								?>
-		            <td width="266" height="90" align="left" valign="top" class="smalltextbold">
-									<span class="storename"><?php echo $Name ?></span>
-									<span class="smalltextbold" style="color: #f00;"><br />
-										<?php if ($Category <> "2") {
-											echo "$Discount <br />";
+		            <div class="searchContainerCol">
+									<p><b><?php echo $Name ?></b></p>
+									<p><?php
+										if ($Category <> "2") {
+											echo "$Discount";
 										}
 										?>
-									</span>
-									<span class="smalltextbold">
-										<?php
+									</p>
+									<p><?php
 										if ($Category <> "2") {
 											echo "$Address <br />";
 										}
@@ -445,41 +379,40 @@ class Cra_Public {
 												echo "$Address2 <br />";
 											}
 										}
+										echo $City.",".$State."&nbsp;";
+										if ($Category <> "2") {
+											echo $ListingZip;
+										}
+										echo "<br />";
+										if ($Category <> "2") {
+											if ($Phone <> "") {
+												echo $this->format_phone($Phone);
+											}
+											echo "<br />";
+											if ($Website <> "") {
+												echo "<a href=http://$Website target=_blank class=listingslink>$Website</a> <br>";
+											}
+										}
 										?>
-										<?php echo $City.",".$State."&nbsp;";
-											if ($Category <> "2") {
-												echo $ListingZip;
-											}
-											echo "<br />";
-											if ($Category <> "2") {
-												if ($Phone <> "") {
-													echo $this->format_phone($Phone);
-												}
-												echo "<br />";
-												if ($Website <> "") {
-													echo "<a href=http://$Website target=_blank class=listingslink>$Website</a> <br>";
-												}
-											}
-											echo "</span>";
-											if ($Category <> "2") {
-												echo '<a href="http://maps.google.com/maps?daddr=<? echo $DirectionAddress; ?>"target="_blank" class="listingslink">Get Directions</a>';
-											}
-											echo "<br />";
-											if ($Category == "2") {
-												echo '<a href="https://www.cigarrights.org/join.php?Type=GACS&MemType=Renew&Ref=" class="listingslinkupgrade">Upgrade to Platinum to show full listing</a>';
-											}
-										?><br /><br /><img src="<? echo $CatPic ?>" /></td>
-									<?php
-									}
+									</p>
+										<?php if ($Category <> "2") {
+											echo '<p><a href="http://maps.google.com/maps?daddr='.$DirectionAddress.'"target="_blank" class="listingslink">Get Directions</a></p>';
+										}
+										if ($Category == "2") {
+											echo '<p><a href="https://www.cigarrights.org/join.php?Type=GACS&MemType=Renew&Ref=" class="listingslinkupgrade">Upgrade to Platinum to show full listing</a></p>';
+										}
 									?>
-							</tr>
-						</table>
+									<p><img src="<?php echo $CatPic ?>" /></p>
+									<br/>
+								</div>
+							<?php
+							}
+							?>
+						</div>
 					</div>
 					<?php
 				}
 				?>
-				</tr>
-				</table>
 			</div>
 		<?php
 	}

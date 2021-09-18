@@ -72,8 +72,8 @@ class Cra_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/cra-admin.css', array(), $this->version, 'all' );
+		 wp_enqueue_style( $this->plugin_name.'-jquery-admin-ui-css', plugin_dir_url( __FILE__ ) . 'css/jquery-ui.css', array(), $this->version, 'all' );
+		 wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/cra-admin.css', array(), $this->version, 'all' );
 
 	}
 
@@ -95,8 +95,8 @@ class Cra_Admin {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cra-admin.js', array( 'jquery' ), $this->version, false );
+		 // wp_enqueue_script('jquery-ui-datepicker');
+		 wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/cra-admin.js', array( 'jquery', 'jquery-ui-datepicker' ), $this->version, false );
 
 	}
 
@@ -1555,14 +1555,88 @@ class Cra_Admin {
 		);
 
 		foreach ($toy_stores as $i => $row) {
-			$res = $wpdb->insert($table_name, $row);			
+			$res = $wpdb->insert($table_name, $row);
 		}
 	}
 
 	public function admin_init_cb() {
+		global $table_prefix, $wpdb;
+		$table_name = $table_prefix . "stores";
+
+		// Execution after import start
 		if ( !empty($_GET['startImport']) ) {
 			$this->import_stores();
 		}
+
+		// Execution if store is added/edited
+		if ( !empty($_POST['store_listing_form_submitted']) && !empty($_POST['store']) ) {
+			if ( !empty($_POST['store_id_to_update']) ) {
+				$addStoreRes = $wpdb->update($table_name, $_POST['store'], array('StoreID'=>$_POST['store_id_to_update']) );
+				// Showing alret notices
+				add_action( 'admin_notices', function($addStoreRes) {
+					?>
+			    <div class="notice notice-success is-dismissible">
+			    	<p> Successfully Updated Store: <?php var_dump($addStoreRes); ?></p>
+			    </div>
+			    <?php
+				});
+			}
+			else {
+				$addStoreRes = $wpdb->insert($table_name, $_POST['store']);
+
+				// Showing alret notices
+				add_action( 'admin_notices', function($addStoreRes) {
+					?>
+			    <div class="notice notice-success is-dismissible">
+			    	<p> Successfully Added Store: <?php var_dump($addStoreRes); ?></p>
+			    </div>
+			    <?php
+				});
+			}
+		}
+
+		// Exection if store is deleted
+		if ( !empty($_GET['deleteStoreId']) ) {
+			$wpdb->delete( $table_name, array('StoreID'=>$_GET['deleteStoreId']) );
+		}
+	}
+
+	/**
+	* This function is rendering the settings page of plugin
+	**/
+	public function ph_infinite_add_menu() {
+		$menu_slug 	= 'cra_settings';
+		$menu_name 	= 'CRA';
+		$menu_main 	= 'CRA Listings';
+		add_menu_page($menu_name, $menu_main, 'manage_options', $menu_slug, '',plugin_dir_url(__FILE__).'assets/img/logo-wp.png', 57);
+		add_submenu_page( $menu_slug, $menu_name, $menu_main, 'manage_options', $menu_slug, array($this, 'infi_settings'));
+		add_submenu_page( $menu_slug, $menu_name, 'Add CRA', 'manage_options', 'add_cra_listings', array($this, 'add_cra_listings'));
+		add_submenu_page( $menu_slug, $menu_name, 'Import Default Listings', 'manage_options', 'import_cra_listings', array($this, 'import_listings'));
+	}
+
+	public function infi_settings() {
+		global $table_prefix, $wpdb;
+		$table_name = $table_prefix . "stores";
+		$results = $wpdb->get_results("SELECT * FROM $table_name ORDER BY StoreID DESC LIMIT 0, 20", ARRAY_A);
+		include 'partials/list_stores.php';
+	}
+
+	public function import_listings() {
+		include 'partials/import-listings.php';
+	}
+
+	public function add_cra_listings() {
+		global $table_prefix, $wpdb;
+		$table_name = $table_prefix . "stores";
+		$StoreID = ""; $Name = ""; $Address = ""; $Address2 = ""; $City = ""; $State = ""; $Zip = ""; $Phone = ""; $Website = ""; $Discount = "";
+		$Category = ""; $Status = ""; $Longitude = ""; $Latitude = ""; $featured = ""; $pastfeatured = ""; $expiration = "";
+		$LastUpdate = ""; $LastUser = "";
+
+		if ( !empty($_GET['storeId']) ) {
+			$storeData = $wpdb->get_row("SELECT * FROM $table_name WHERE StoreID =".$_GET['storeId'], ARRAY_A);
+			extract($storeData);
+		}
+		include 'partials/add_listing.php';
 	}
 
 }
